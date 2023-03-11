@@ -19,27 +19,22 @@ type fields struct {
 	sound string
 }
 
-type f struct {
-	food  string
-	loco  string
-	sound string
+func (p fields) eat() {
+	fmt.Print("is a ", p.atype, ". It eats ", p.food, ".\n")
 }
 
-func (p f) eat() {
-	fmt.Println("eats: ", p.food)
+func (p fields) move() {
+	fmt.Print("is a ", p.atype, ". It moves by ", p.loco, ".\n")
 }
 
-func (p f) move() {
-	fmt.Println("locomotion: ", p.loco)
-}
-
-func (p f) speak() {
-	fmt.Println("speaks: ", p.sound)
+func (p fields) speak() {
+	fmt.Print("is a ", p.atype, ". It speaks ", p.sound, ".\n")
 }
 
 //Func userprompt lets to input just command words in one line with space
-func userprompt(err string) (comand string, name string, info string) {
+func userprompt(err string) (command string, name string, info string) {
 	fmt.Println(err)
+	command, name, info = "", "", ""
 	fmt.Println("Input format:")
 	fmt.Println("1. newanimal, name, type (cow, bird, snake)")
 	fmt.Println("2. query, name, function (eat, move, speak)")
@@ -50,12 +45,13 @@ func userprompt(err string) (comand string, name string, info string) {
 	fmt.Println(inputline)
 	inputstring := strings.Split(inputline, " ")
 	if len(inputstring) != 3 {
-		userprompt("Error! Wrong format.")
+		userprompt("\nError! Wrong format.\n")
 	}
-	comand, name, info = inputstring[0], inputstring[1], inputstring[2]
+	command, name, info = inputstring[0], inputstring[1], inputstring[2]
 	return
 }
 
+//Func newanimal fills properties of animal types into the map
 func newanimal(info string) fields {
 	switch info {
 	case "cow":
@@ -65,27 +61,29 @@ func newanimal(info string) fields {
 	case "snake":
 		return fields{"snake", "mice", "slither", "hsss"}
 	default:
-		userprompt("Error! Animal type is wrong.")
+		userprompt("\nError! Animal type is wrong.\n")
 	}
 	return fields{"", "", "", ""}
 }
 
 func main() {
 	animals := make(map[string]fields)
-	var comand, name, info string
-	err := ""
+	var command, name, info string
 	for {
-		comand, name, info = userprompt(err)
-		if comand == "newanimal" {
+		err := ""
+		command, name, info = userprompt(err)
+		if command == "newanimal" {
 			for i, _ := range animals {
 				if i == name {
-					userprompt("Error! This name is already exist.")
+					userprompt("\nError! This name is already exist.\n")
 				}
 			}
 			animals[name] = newanimal(info)
 		}
-		if comand == "query" {
-			var a Animal = f{animals[name].food, animals[name].loco, animals[name].sound}
+		if command == "query" {
+			var a Animal = fields{animals[name].atype, animals[name].food, animals[name].loco, animals[name].sound}
+			fmt.Print("----------------------------------")
+			fmt.Print("\n", name, " ")
 			switch info {
 			case "eat":
 				a.eat()
@@ -94,8 +92,12 @@ func main() {
 			case "speak":
 				a.speak()
 			}
+			fmt.Print("----------------------------------")
 		}
-		fmt.Println("Current database contents:")
+		if command != "newanimal" && command != "query" {
+			err = "\nError! Wrong command.\n"
+		}
+		fmt.Println("\nThe database contains:")
 		for i, ii := range animals {
 			fmt.Print(i, ii, "\n")
 		}
