@@ -35,19 +35,17 @@ func (p fields) speak() {
 func userprompt(err string) (command string, name string, info string) {
 	fmt.Println(err)
 	command, name, info = "", "", ""
-	fmt.Println("Input format:")
 	fmt.Println("1. newanimal, name, type (cow, bird, snake)")
 	fmt.Println("2. query, name, function (eat, move, speak)")
-	fmt.Print("> ")
+	fmt.Print("Please enter command > ")
 	inputline, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	inputline = strings.Trim(inputline, "\r\n")
 	inputline = strings.ReplaceAll(inputline, "  ", " ")
 	fmt.Println(inputline)
 	inputstring := strings.Split(inputline, " ")
-	if len(inputstring) != 3 {
-		userprompt("\nError! Wrong format.\n")
+	if len(inputstring) == 3 {
+		command, name, info = inputstring[0], inputstring[1], inputstring[2]
 	}
-	command, name, info = inputstring[0], inputstring[1], inputstring[2]
 	return
 }
 
@@ -60,8 +58,6 @@ func newanimal(info string) fields {
 		return fields{"bird", "worms", "fly", "peep"}
 	case "snake":
 		return fields{"snake", "mice", "slither", "hsss"}
-	default:
-		userprompt("\nError! Animal type is wrong.\n")
 	}
 	return fields{"", "", "", ""}
 }
@@ -69,34 +65,65 @@ func newanimal(info string) fields {
 func main() {
 	animals := make(map[string]fields)
 	var command, name, info string
+	var flag bool
+	err := ""
+	line := "----------------------------------"
+
 	for {
-		err := ""
 		command, name, info = userprompt(err)
+		err = ""
+
+		//Command "newanimal" process
 		if command == "newanimal" {
+			if info == "cow" || info == "bird" || info == "snake" {
+				flag = false
+			} else {
+				flag = true
+			}
 			for i, _ := range animals {
 				if i == name {
-					userprompt("\nError! This name is already exist.\n")
+					flag = true
 				}
 			}
-			animals[name] = newanimal(info)
+			if flag == false {
+				animals[name] = newanimal(info)
+			} else {
+				err = "\nError! Existed name or wrong type.\n"
+			}
 		}
+
+		//Command "query" process
 		if command == "query" {
 			var a Animal = fields{animals[name].atype, animals[name].food, animals[name].loco, animals[name].sound}
-			fmt.Print("----------------------------------")
-			fmt.Print("\n", name, " ")
-			switch info {
-			case "eat":
-				a.eat()
-			case "move":
-				a.move()
-			case "speak":
-				a.speak()
+			if info == "eat" || info == "move" || info == "speak" {
+				for i, _ := range animals {
+					err = "\nError! Wrong animal's name.\n"
+					if i == name {
+						fmt.Print(line)
+						fmt.Print("\n", name, " ")
+						switch info {
+						case "eat":
+							a.eat()
+						case "move":
+							a.move()
+						case "speak":
+							a.speak()
+						}
+						fmt.Print(line)
+						err = ""
+						break
+					}
+				}
+			} else {
+				err = "\nError! Wrong function.\n"
 			}
-			fmt.Print("----------------------------------")
 		}
+
 		if command != "newanimal" && command != "query" {
-			err = "\nError! Wrong command.\n"
+			err = "\nError! Wrong format.\n"
 		}
+
+		//Printing current database
 		fmt.Println("\nThe database contains:")
 		for i, ii := range animals {
 			fmt.Print(i, ii, "\n")
