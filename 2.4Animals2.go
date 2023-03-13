@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var command, name, info string = "", "", ""
+
 type Animal interface {
 	eat()
 	move()
@@ -31,9 +33,7 @@ func (p fields) speak() {
 	fmt.Print("is a ", p.atype, ". It speaks ", p.sound, ".\n")
 }
 
-//Func userprompt lets to input just command words in one line with space
-func userprompt(err string) (command string, name string, info string) {
-	fmt.Println(err)
+func userprompt() (command, name, info string) {
 	command, name, info = "", "", ""
 	fmt.Println("1. newanimal, name, type (cow, bird, snake)")
 	fmt.Println("2. query, name, function (eat, move, speak)")
@@ -47,6 +47,42 @@ func userprompt(err string) (command string, name string, info string) {
 		command, name, info = inputstring[0], inputstring[1], inputstring[2]
 	}
 	return
+}
+
+func checkprompt(command, name, info string, animal_slices []string) bool {
+	switch command {
+	case "newanimal":
+		{
+			if info != "cow" && info != "bird" && info != "snake" {
+				fmt.Println("\nError! Wrong animal.\n")
+				return true
+			}
+			for _, i := range animal_slices {
+				if i == name {
+					fmt.Println("\nError! Existed name.\n")
+					return true
+				}
+			}
+			return false
+		}
+
+	case "query":
+		{
+			if info != "eat" && info != "move" && info != "speak" {
+				fmt.Println("\nError! Wrong query.\n")
+				return true
+			}
+			for _, i := range animal_slices {
+				if i == name {
+					return false
+				}
+			}
+			fmt.Println("\nError! Name is unknown.\n")
+			return true
+		}
+	}
+	fmt.Println("\nError! Wrong comand.\n")
+	return true
 }
 
 //Func newanimal fills properties of animal types into the map
@@ -64,69 +100,49 @@ func newanimal(info string) fields {
 
 func main() {
 	animals := make(map[string]fields)
-	var command, name, info string
-	var flag bool
-	err := ""
+	err := true
 	line := "----------------------------------"
 
-	for {
-		command, name, info = userprompt(err)
-		err = ""
-
-		//Command "newanimal" process
-		if command == "newanimal" {
-			if info == "cow" || info == "bird" || info == "snake" {
-				flag = false
-			} else {
-				flag = true
-			}
+	for { //Main loop for prompt
+		for err == true { //Loop for entering and cheking the command
+			command, name, info = userprompt()
+			var animal_slice []string = make([]string, 0)
 			for i, _ := range animals {
-				if i == name {
-					flag = true
-				}
+				animal_slice = append(animal_slice, i)
 			}
-			if flag == false {
-				animals[name] = newanimal(info)
-			} else {
-				err = "\nError! Existed name or wrong type.\n"
-			}
+			err = checkprompt(command, name, info, animal_slice)
 		}
 
 		//Command "query" process
 		if command == "query" {
 			var a Animal = fields{animals[name].atype, animals[name].food, animals[name].loco, animals[name].sound}
-			if info == "eat" || info == "move" || info == "speak" {
-				for i, _ := range animals {
-					err = "\nError! Wrong animal's name.\n"
-					if i == name {
-						fmt.Print(line)
-						fmt.Print("\n", name, " ")
-						switch info {
-						case "eat":
-							a.eat()
-						case "move":
-							a.move()
-						case "speak":
-							a.speak()
-						}
-						fmt.Print(line)
-						err = ""
-						break
+			for i, _ := range animals {
+				if i == name {
+					fmt.Print(line)
+					fmt.Print("\n", name, " ")
+					switch info {
+					case "eat":
+						a.eat()
+					case "move":
+						a.move()
+					case "speak":
+						a.speak()
 					}
+					fmt.Print(line)
+					break
 				}
-			} else {
-				err = "\nError! Wrong function.\n"
 			}
-		}
-
-		if command != "newanimal" && command != "query" {
-			err = "\nError! Wrong format.\n"
+		} else {
+			//Command "newanimal" process
+			animals[name] = newanimal(info)
 		}
 
 		//Printing current database
 		fmt.Println("\nThe database contains:")
 		for i, ii := range animals {
-			fmt.Print(i, ii, "\n")
+			fmt.Println(i, ii)
 		}
+		fmt.Println("")
+		err = true
 	}
 }
